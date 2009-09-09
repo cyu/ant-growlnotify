@@ -1,7 +1,11 @@
 package com.google.code.ant.growlnotify;
 
+import java.util.Hashtable;
+
 import org.apache.tools.ant.BuildEvent;
 import org.apache.tools.ant.BuildListener;
+import org.apache.tools.ant.Project;
+import org.apache.tools.ant.PropertyHelper;
 
 public class GrowlListener implements BuildListener {
 
@@ -26,11 +30,13 @@ public class GrowlListener implements BuildListener {
     }
 
     public void targetFinished(BuildEvent event) {
-        sendMessage("Finished target: " + event.getTarget(), GrowlNotification.NORMAL, false);
+        if (isVerbose(event))
+            sendMessage("Finished target: " + event.getTarget(), GrowlNotification.NORMAL, false);
     }
 
     public void targetStarted(BuildEvent event) {
-        sendMessage("Started target: " + event.getTarget(), GrowlNotification.NORMAL, false);
+        if (isVerbose(event))
+            sendMessage("Started target: " + event.getTarget(), GrowlNotification.NORMAL, false);
     }
 
     public void taskFinished(BuildEvent event) {
@@ -45,6 +51,11 @@ public class GrowlListener implements BuildListener {
         } catch (GrowlException e) {
             e.printStackTrace();
         }
+    }
+    
+    protected boolean isVerbose(BuildEvent event) {
+        PropertyHelper propertyHelper = PropertyHelper.getPropertyHelper(event.getProject());
+        return Project.toBoolean((String)propertyHelper.getProperty(null, "growl.verbose"));
     }
 
     public static void main(String[] args) {
