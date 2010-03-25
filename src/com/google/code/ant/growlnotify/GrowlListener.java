@@ -20,10 +20,10 @@ public class GrowlListener implements BuildListener {
         Throwable exception = event.getException();
         String projectName = event.getProject().getName();
         if (exception != null) {
-            sendMessage("Build failed: " + exception.toString(), GrowlNotification.HIGH, true);
-            return;
+            sendMessage("Build failed: " + exception.toString(), GrowlNotification.HIGH, isStickyOnBuildFailure(event));
+        } else {
+            sendMessage("Build finished for " + projectName, GrowlNotification.NORMAL, isStickyOnBuildSuccess(event));
         }
-        sendMessage("Build finished for " + projectName, GrowlNotification.NORMAL, true);
     }
 
     public void messageLogged(BuildEvent event) {
@@ -52,10 +52,23 @@ public class GrowlListener implements BuildListener {
             e.printStackTrace();
         }
     }
-    
+
+    protected boolean isStickyOnBuildSuccess(BuildEvent event) {
+        return getBooleanProperty(event, "growl.build.success.sticky", true);
+    }
+
+    protected boolean isStickyOnBuildFailure(BuildEvent event) {
+        return getBooleanProperty(event, "growl.build.failure.sticky", true);
+    }
+
     protected boolean isVerbose(BuildEvent event) {
+        return getBooleanProperty(event, "growl.verbose", false);
+    }
+
+    protected boolean getBooleanProperty(BuildEvent event, String name, boolean defaultValue) {
         PropertyHelper propertyHelper = PropertyHelper.getPropertyHelper(event.getProject());
-        return Project.toBoolean((String)propertyHelper.getProperty(null, "growl.verbose"));
+        String val = (String) propertyHelper.getProperty(null, name);
+        return (val == null) ? defaultValue : Project.toBoolean(val);
     }
 
     public static void main(String[] args) {
